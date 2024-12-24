@@ -73,10 +73,26 @@ func postTasks(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusCreated)
 }
 
+func getTasksId(res http.ResponseWriter, req *http.Request) {
+	id := chi.URLParam(req, "id")
+	task, ok := tasks[id]
+	if !ok {
+		http.Error(res, "Задача не найдена", http.StatusNotFound)
+		return
+	}
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(res).Encode(task)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+	}
+}
+
 func main() {
 	r := chi.NewRouter()
 	r.Get("/task", getAllTasks)
 	r.Post("/task", postTasks)
+	r.Get("/task/{id}", getTasksId)
 
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		fmt.Printf("Ошибка при запуске сервера: %s", err.Error())
